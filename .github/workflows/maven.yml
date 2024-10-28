@@ -21,24 +21,24 @@ jobs:
       - name: Build with Maven
         run: mvn clean package
 
-      - name: Upload JAR file
+      - name: Upload WAR file
         uses: actions/upload-artifact@v3
         with:
           name: java-app
-          path: target/*.jar
+          path: target/*.war
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
     
     steps:
-      - name: Download JAR file
+      - name: Download WAR file
         uses: actions/download-artifact@v3
         with:
           name: java-app
           path: target
           
-      - name: Deploy JAR via SCP
+      - name: Deploy WAR via SCP
         env:
           SSH_KEY: ${{ secrets.SSH_KEY }}
           HOSTNAME: ${{ secrets.SSH_IP}}
@@ -47,12 +47,11 @@ jobs:
           echo "$SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H $HOSTNAME >> ~/.ssh/known_hosts
-          scp -i ~/.ssh/id_rsa target/*.jar ubuntu@${{ secrets.SSH_IP }}:/home/ubuntu/
+          scp -i ~/.ssh/id_rsa target/*.war ubuntu@${{ secrets.SSH_IP }}:/home/ubuntu/
           
-      - name: Copy JAR file to Deployment Directory
+      - name: Copy WAR file to Deployment Directory
         env:
           SSH_KEY: ${{ secrets.SSH_KEY }}
           HOSTNAME: ${{ secrets.SSH_IP }}
         run: |
-          ssh -i ~/.ssh/id_rsa ubuntu@${{ secrets.SSH_IP }} 'sudo cp /home/ubuntu/*.jar /var/www/html/myjavaapp/'
-          ssh -i ~/.ssh/id_rsa ubuntu@${{ secrets.SSH_IP }} 'nohup java -jar /var/www/html/myjavaapp/*.jar > /var/www/html/myjavaapp/app.log 2>&1 &'
+          ssh -i ~/.ssh/id_rsa ubuntu@${{ secrets.SSH_IP }} 'sudo cp /home/ubuntu/*.war /var/www/html/myjavaapp/'
