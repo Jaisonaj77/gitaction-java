@@ -55,4 +55,4 @@ jobs:
           HOSTNAME: ${{ secrets.SSH_IP }}
         run: |
           ssh -i ~/.ssh/id_rsa ubuntu@${{ secrets.SSH_IP }} 'sudo cp /home/ubuntu/*.jar /var/www/html/myjavaapp/'
-          ssh -i ~/.ssh/id_rsa ubuntu@${{ secrets.SSH_HOST }} 'nohup java -jar /var/www/html/myjavaapp/*.jar > /var/www/html/myjavaapp/app.log 2>&1 &'
+          ssh -i ~/.ssh/id_rsa ubuntu@${{ secrets.SSH_IP }} 'nohup java -jar /var/www/html/myjavaapp/*.jar > /var/www/html/myjavaapp/app.log 2>&1 &'
