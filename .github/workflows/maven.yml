@@ -21,36 +21,38 @@ jobs:
       - name: Build with Maven
         run: mvn clean package
 
-      - name: Upload  WAR file
+      - name: Upload JAR file
         uses: actions/upload-artifact@v3
         with:
           name: java-app
-          path: target/*.war
+          path: target/*.jar
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
     
     steps:
-      - name: Download WAR file
+      - name: Download JAR file
         uses: actions/download-artifact@v3
         with:
           name: java-app
           path: target
           
-      - name: Deploy WAR via SCP
+      - name: Deploy JAR via SCP
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          HOSTNAME: ${{ secrets.SSH_HOST }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          HOSTNAME: ${{ secrets.SSH_IP}}
         run: |
           mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H $HOSTNAME >> ~/.ssh/known_hosts
-          scp -i ~/.ssh/id_rsa target/*.war ubuntu@${{ secrets.SSH_HOST }}:/home/ubuntu/
-      - name: Copy WAR file to Tomcat webapps
+          scp -i ~/.ssh/id_rsa target/*.jar ubuntu@${{ secrets.SSH_IP }}:/home/ubuntu/
+          
+      - name: Copy JAR file to Deployment Directory
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          HOSTNAME: ${{ secrets.SSH_HOST }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          HOSTNAME: ${{ secrets.SSH_IP }}
         run: |
-          ssh -i ~/.ssh/id_rsa ubuntu@${{ secrets.SSH_HOST }} 'sudo cp /home/ubuntu/*.war /var/lib/tomcat9/webapps/'
+          ssh -i ~/.ssh/id_rsa ubuntu@${{ secrets.SSH_IP }} 'sudo cp /home/ubuntu/*.jar /var/www/html/myjavaapp/'
+          ssh -i ~/.ssh/id_rsa ubuntu@${{ secrets.SSH_HOST }} 'nohup java -jar /var/www/html/myjavaapp/*.jar > /var/www/html/myjavaapp/app.log 2>&1 &'
